@@ -1,3 +1,4 @@
+import os
 """Reads the October calendar workbook, renders 1080x1350 branded images for Static/Carousel rows,
 and writes queue.csv (Reels get status needs_video). Re-runnable. Usage: python build_posts.py CALENDAR.xlsx"""
 import sys, os, re, textwrap, datetime as dt
@@ -5,7 +6,7 @@ import openpyxl
 from PIL import Image, ImageDraw, ImageFont
 from common import write_queue
 
-BG, FG, ACC, MUT = (17,17,17), (245,242,234), (217,164,65), (150,146,138)
+BG, FG, ACC, MUT, LINE = (251,227,211), (59,42,34), (196,112,82), (125,96,82), (225,190,170)
 W, H = 1080, 1350
 F = "/usr/share/fonts/truetype/google-fonts/Poppins-%s.ttf"
 def font(w, s): return ImageFont.truetype(F % w, s)
@@ -26,12 +27,16 @@ def fit(d, text, weight, maxw, maxh, start, minsize=34):
 
 def frame(tag, n=None, total=None):
     im = Image.new("RGB", (W, H), BG); d = ImageDraw.Draw(im)
-    d.ellipse((70, 70, 150, 150), outline=FG, width=4)
-    d.text((110, 110), "R", font=font("Bold", 46), fill=FG, anchor="mm")
-    d.text((172, 110), "RUYAN CORPORATE SERVICES", font=font("Bold", 24), fill=FG, anchor="lm")
+    if os.path.exists("logo.png"):
+        wm = Image.open("logo.png").split()[3].resize((760, 760), Image.LANCZOS).point(lambda v: int(v * 0.10))
+        im.paste(Image.new("RGB", (760, 760), FG), (W - 600, H - 700), wm)
+    x0 = 70
+    if os.path.exists("logo.png"):
+        lg = Image.open("logo.png").split()[3].resize((84, 84), Image.LANCZOS); im.paste(Image.new("RGB", (84, 84), FG), (68, 68), lg); x0 = 174
+    d.text((x0, 110), "RUYAN CORPORATE SERVICES", font=font("Bold", 24), fill=FG, anchor="lm")
     d.text((70, 215), tag.upper(), font=font("Bold", 26), fill=ACC)
     if n: d.text((W - 70, 110), f"{n}/{total}", font=font("Medium", 26), fill=MUT, anchor="rm")
-    d.line((70, H - 120, W - 70, H - 120), fill=(60, 60, 60), width=2)
+    d.line((70, H - 120, W - 70, H - 120), fill=LINE, width=2)
     d.text((70, H - 80), "Accounting | GST | Tax | Loans | Subsidy | ROC", font=font("Regular", 24), fill=MUT, anchor="lm")
     return im, d
 
