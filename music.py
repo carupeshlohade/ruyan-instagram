@@ -2,10 +2,10 @@
 import numpy as np, wave
 SR = 44100
 def note(f): return 440.0 * 2 ** ((f - 69) / 12)
-def make(total, cuts, path, bpm=96, seed=1):
+def make(total, cuts, path, bpm=96, seed=1, prog=None, bell=False, kick=(0, 2)):
     rng = np.random.default_rng(seed); n = int(total * SR); out = np.zeros(n)
     beat = 60 / bpm; t = np.arange(n) / SR
-    prog = [[48,52,55,59],[45,48,52,55],[41,45,48,52],[43,47,50,53]]  # Cmaj7 Am7 Fmaj7 G6
+    prog = prog or [[48,52,55,59],[45,48,52,55],[41,45,48,52],[43,47,50,53]]
     bar = beat * 4
     for b in range(int(total / bar) + 1):
         ch = prog[b % 4]; s = int(b * bar * SR); L = int(bar * SR * 1.05)
@@ -19,9 +19,9 @@ def make(total, cuts, path, bpm=96, seed=1):
             a = int((b * bar + k * beat / 2) * SR)
             if a >= n: break
             tt2 = np.arange(min(int(0.6*SR), n - a)) / SR
-            p = np.sin(2*np.pi*note(m)*tt2) + 0.3*np.sin(2*np.pi*note(m)*2*tt2)
-            out[a:a+len(tt2)] += 0.07 * p * np.exp(-tt2 * 7) * np.minimum(tt2 / 0.004, 1)
-        for k in (0, 2):  # kick on 1 and 3
+            p = np.sin(2*np.pi*note(m)*tt2) + 0.3*np.sin(2*np.pi*note(m)*2*tt2) + (0.35*np.sin(2*np.pi*note(m)*2.76*tt2) if bell else 0)
+            out[a:a+len(tt2)] += 0.07 * p * np.exp(-tt2 * (4 if bell else 7)) * np.minimum(tt2 / 0.004, 1)
+        for k in kick:
             a = int((b * bar + k * beat) * SR)
             if a >= n: break
             tt3 = np.arange(min(int(0.35*SR), n - a)) / SR
