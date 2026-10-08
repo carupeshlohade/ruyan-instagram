@@ -27,6 +27,9 @@ def publish(row):
         c = api("POST", f"{IG}/media", {"media_type": "CAROUSEL", "children": ",".join(kids), "caption": cap})["id"]
     elif fmt == "Reel":
         c = api("POST", f"{IG}/media", {"media_type": "REELS", "video_url": urls[0], "caption": cap, "share_to_feed": "true"})["id"]
+    elif fmt == "Story":
+        key = "video_url" if urls[0].lower().endswith(".mp4") else "image_url"
+        c = api("POST", f"{IG}/media", {"media_type": "STORIES", key: urls[0]})["id"]
     else:
         raise RuntimeError(f"unknown format {fmt}")
     wait_ready(c)
