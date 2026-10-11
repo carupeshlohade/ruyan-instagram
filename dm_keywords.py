@@ -34,6 +34,12 @@ def private_reply(comment_id, text):
         os.environ["IG_ACCESS_TOKEN"] = saved
 
 def check():
+    import io, contextlib
+    buf = io.StringIO()
+    with contextlib.redirect_stdout(buf): _check()
+    out = buf.getvalue(); print(out); open("dm_check.txt", "w").write(out)
+
+def _check():
     for path, params in (("me/permissions", {}), ("me/accounts", {"fields": "id,name,instagram_business_account,tasks"}),
                          (IG, {"fields": "username,followers_count"})):
         try:
