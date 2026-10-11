@@ -44,7 +44,7 @@ def main():
         if due > now: continue
         if (now - due) > dt.timedelta(hours=12):
             r["status"], r["error"] = "missed", "more than 12h late, not auto-posted"; changed = True; continue
-        if done >= 1: break          # max one post per run
+        if done >= 1 and r["format"] != "Story": continue   # max one feed post per run; stories go out together
         if DRY: print("DRY:", r["id"], r["format"], r["media"]); continue
         try:
             r["posted_media_id"] = publish(r); r["status"] = "posted"
