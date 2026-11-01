@@ -1,4 +1,4 @@
-"""Keyword comment -> DM. Watches posted lead posts (queue ids containing 'lead-<keyword>') for 7 days.
+"""Keyword comment -> DM. Watches every posted item for 14 days whose caption has "Comment <KEYWORD>" (or id 'lead-<keyword>').
 When a comment contains the keyword, sends one private reply (Instagram private replies API) with the
 checklist link and a short public reply. Every handled comment is logged in dm_log.csv (never DMs twice).
 Run:  python dm_keywords.py          (process)
@@ -12,6 +12,8 @@ NAMES = {"GST": "GST Registration Checklist", "ITR": "Income Tax Return Checklis
          "LOAN": "Business Loan Document Checklist", "SUBSIDY": "Subsidy Claim Checklist"}
 DM = ("Hi! Here's your free {name}:\n{link}\n\n"
       "Any questions? Reply here or call/WhatsApp 7020570215.\n\n- Ruyan Corporate Services")
+GENERIC = ("Hi! Thanks for commenting {kw} on our post. Our team will send you the details shortly.\n\n"
+           "Reply here with your WhatsApp number, or message us directly on WhatsApp 7020570215.\n\n- Ruyan Corporate Services")
 PUBLIC = ["Sent to your DM, check your inbox!", "Done! Check your DMs.", "Just sent it to your inbox.", "Check your DMs, it's there!"]
 LOG = "dm_log.csv"; FIELDS = ["comment_id", "media_id", "keyword", "username", "comment", "dm", "public", "at", "error"]
 IST = dt.timezone(dt.timedelta(hours=5, minutes=30))
@@ -58,12 +60,12 @@ def main():
     me = api("GET", IG, {"fields": "username"}).get("username", "")
     now = dt.datetime.now(IST); new = []
     for row in read_queue():
-        m = re.search(r"lead-([a-z]+)", row["id"])
-        if not m or row["status"] != "posted" or not row["posted_media_id"]: continue
+        if row["status"] != "posted" or not row["posted_media_id"]: continue
+        m = re.search(r"lead-([a-z]+)", row["id"]) or re.search(r"\bComment\s+([A-Z]{3,})\b", row.get("caption", ""))
+        if not m: continue
         kw = m.group(1).upper()
-        if kw not in LINKS: continue
         try:
-            if now - dt.datetime.fromisoformat(row["posted_at"]) > dt.timedelta(days=7): continue
+            if now - dt.datetime.fromisoformat(row["posted_at"]) > dt.timedelta(days=14): continue
         except Exception: pass
         res = api("GET", f"{row['posted_media_id']}/comments", {"fields": "id,text,username,timestamp", "limit": "100"})
         for c in res.get("data", []):
@@ -71,7 +73,9 @@ def main():
             if not re.search(rf"\b{kw}\b", c.get("text", ""), re.I): continue
             rec = dict(comment_id=c["id"], media_id=row["posted_media_id"], keyword=kw, username=c.get("username", ""),
                        comment=c.get("text", "")[:100], dm="", public="", at=now.isoformat(timespec="minutes"), error="")
-            try: private_reply(c["id"], DM.format(name=NAMES[kw], link=LINKS[kw])); rec["dm"] = "sent"
+            try:
+                msg = DM.format(name=NAMES.get(kw, kw.title() + " Checklist"), link=LINKS[kw]) if kw in LINKS else GENERIC.format(kw=kw)
+                private_reply(c["id"], msg); rec["dm"] = "sent"
             except Exception as e: rec["dm"] = "failed"; rec["error"] = str(e)[:250]
             if rec["dm"] == "sent":
                 try: api("POST", f"{c['id']}/replies", {"message": random.choice(PUBLIC)}); rec["public"] = "sent"
