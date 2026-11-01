@@ -16,20 +16,21 @@ def wait_ready(cid, tries=30):
         time.sleep(10)
     raise RuntimeError("container not ready in time")
 
-def publish(row):
+def publish(row, ai_flag=True):
     files = [m.strip() for m in row["media"].split(";") if m.strip()]
     urls = [BASEURL + f for f in files]
     cap, fmt = row["caption"], row["format"]
+    ai = {"is_ai_generated": "true"} if ai_flag and row.get("ai", "").strip().lower() in ("yes", "true", "1") else {}
     if fmt == "Static":
-        c = api("POST", f"{IG}/media", {"image_url": urls[0], "caption": cap})["id"]
+        c = api("POST", f"{IG}/media", {"image_url": urls[0], "caption": cap, **ai})["id"]
     elif fmt == "Carousel":
         kids = [api("POST", f"{IG}/media", {"image_url": u, "is_carousel_item": "true"})["id"] for u in urls]
-        c = api("POST", f"{IG}/media", {"media_type": "CAROUSEL", "children": ",".join(kids), "caption": cap})["id"]
+        c = api("POST", f"{IG}/media", {"media_type": "CAROUSEL", "children": ",".join(kids), "caption": cap, **ai})["id"]
     elif fmt == "Reel":
-        c = api("POST", f"{IG}/media", {"media_type": "REELS", "video_url": urls[0], "caption": cap, "share_to_feed": "true"})["id"]
+        c = api("POST", f"{IG}/media", {"media_type": "REELS", "video_url": urls[0], "caption": cap, "share_to_feed": "true", **ai})["id"]
     elif fmt == "Story":
         key = "video_url" if urls[0].lower().endswith(".mp4") else "image_url"
-        c = api("POST", f"{IG}/media", {"media_type": "STORIES", key: urls[0]})["id"]
+        c = api("POST", f"{IG}/media", {"media_type": "STORIES", key: urls[0], **ai})["id"]
     else:
         raise RuntimeError(f"unknown format {fmt}")
     wait_ready(c)
@@ -47,7 +48,13 @@ def main():
         if done >= 1 and r["format"] != "Story": continue   # max one feed post per run; stories go out together
         if DRY: print("DRY:", r["id"], r["format"], r["media"]); continue
         try:
-            r["posted_media_id"] = publish(r); r["status"] = "posted"
+            try:
+                r["posted_media_id"] = publish(r)
+            except Exception as e1:
+                if "is_ai_generated" not in str(e1) or not r.get("ai"): raise
+                r["posted_media_id"] = publish(r, ai_flag=False)   # API refused the AI label: post anyway, flag it
+                print("WARN AI label refused for", r["id"])
+            r["status"] = "posted"
             r["posted_at"] = now.isoformat(timespec="minutes"); r["error"] = ""; done += 1
         except Exception as e:
             r["status"], r["error"] = "failed", str(e)[:300]

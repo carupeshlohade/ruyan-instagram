@@ -25,7 +25,7 @@ def api(method, path, params=None):
     except urllib.error.HTTPError as e:
         raise RuntimeError(f"Graph API {e.code}: {e.read().decode()[:400]}")
 
-QUEUE_FIELDS = ["id","date","time","format","media","caption","status","posted_media_id","posted_at","error"]
+QUEUE_FIELDS = ["id","date","time","format","media","caption","status","posted_media_id","posted_at","error","ai"]  # ai: yes = AI-generated imagery, sets Instagram AI info label
 
 def read_queue(path="queue.csv"):
     with open(path, newline="", encoding="utf-8") as f:
