@@ -14,7 +14,13 @@ DM = ("Hi! Here's your free {name}:\n{link}\n\n"
       "Any questions? Reply here or call/WhatsApp 7020570215.\n\n- Ruyan Corporate Services")
 GENERIC = ("Hi! Thanks for commenting {kw} on our post. Our team will send you the details shortly.\n\n"
            "Reply here with your WhatsApp number, or message us directly on WhatsApp 7020570215.\n\n- Ruyan Corporate Services")
-PUBLIC = ["Sent to your DM, check your inbox!", "Done! Check your DMs.", "Just sent it to your inbox.", "Check your DMs, it's there!"]
+# Public comment replies (user 7 Nov: "Thanks for your interest. Kindly follow us and check your dm")
+PUBLIC = ["Thanks for your interest! Kindly follow us and check your DM 📩",
+          "Thank you for your interest! Please follow us and check your DM 📩",
+          "Thanks for your interest! Do follow us and check your DM 📩"]
+PUBLIC_NODM = "Thanks for your interest! Kindly follow us, and WhatsApp us on 7020570215 for the details."
+# Per-keyword DM text approved by the user (dm_messages.json); falls back to checklist / GENERIC
+CUSTOM = json.load(open("dm_messages.json")) if os.path.exists("dm_messages.json") else {}
 LOG = "dm_log.csv"; FIELDS = ["comment_id", "media_id", "keyword", "username", "comment", "dm", "public", "at", "error"]
 IST = dt.timezone(dt.timedelta(hours=5, minutes=30))
 
@@ -74,12 +80,14 @@ def main():
             rec = dict(comment_id=c["id"], media_id=row["posted_media_id"], keyword=kw, username=c.get("username", ""),
                        comment=c.get("text", "")[:100], dm="", public="", at=now.isoformat(timespec="minutes"), error="")
             try:
-                msg = DM.format(name=NAMES.get(kw, kw.title() + " Checklist"), link=LINKS[kw]) if kw in LINKS else GENERIC.format(kw=kw)
+                if kw in CUSTOM: msg = CUSTOM[kw].replace("{name}", c.get("username", "") or "there")
+                elif kw in LINKS: msg = DM.format(name=NAMES.get(kw, kw.title() + " Checklist"), link=LINKS[kw])
+                else: msg = GENERIC.format(kw=kw)
                 private_reply(c["id"], msg); rec["dm"] = "sent"
             except Exception as e: rec["dm"] = "failed"; rec["error"] = str(e)[:250]
-            if rec["dm"] == "sent":
-                try: api("POST", f"{c['id']}/replies", {"message": random.choice(PUBLIC)}); rec["public"] = "sent"
-                except Exception as e: rec["public"] = "failed"; rec["error"] = str(e)[:250]
+            try:
+                api("POST", f"{c['id']}/replies", {"message": random.choice(PUBLIC) if rec["dm"] == "sent" else PUBLIC_NODM}); rec["public"] = "sent"
+            except Exception as e: rec["public"] = "failed"; rec["error"] = (rec["error"] + " | " + str(e))[:250]
             done[c["id"]] = rec; new.append(rec)
     if new:
         with open(LOG, "w", newline="", encoding="utf-8") as f:
