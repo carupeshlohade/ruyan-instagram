@@ -58,3 +58,11 @@ Verify before any post: bench/date on Indian Kanoon; new-Act section numbers (si
 209. [ ] Reopening on change of opinion invalid — Chetan Sabharwal v ACIT, SC, CA 13953/2026, 28.10.2026
 210. [ ] GST cash seizure without "reason to believe" illegal, Rs 1 cr released — Smurti Waghdhare (scrap trader), Bom HC (Taxscan 20.03.2026)
 211. [ ] GST registration restored after clearing dues (illness, restaurant premises) — Kishore Nichani, Bom HC (Taxscan 04.02.2026)
+
+## Added 08-Nov-2026
+212. [D 08-Nov] Shop stock fire claim rejected as "forged bills" — Ghulam Mohammad Shah v Bajaj Allianz, DCDRC Kupwara (LiveLaw 01.09.2026); Rs 5 lakh + 6% + Rs 50,000 + Rs 20,000; stock insured Rs 10 lakh vs ~Rs 25 lakh loss
+213. [D 08-Nov] GST paid as CGST+SGST instead of IGST, Sec 74 demand — DHR Holding India Pvt Ltd v UOI, Bom HC (M.S. Karnik & Sandesh D. Patil JJ), WP 1214/2025, 30.10.2026 (LiveLawBiz 06.11.2026); order set aside, transfer to IGST head; s.74/77 CGST, s.19 IGST
+214. [D 08-Nov] Wrong PAN in Form 26QB (property TDS) — Rinkoo Processors Ltd v ITO, ITAT Ahmedabad (Taxscan 15.07.2026); TDS Rs 3,50,000 on Rs 3.5 cr purchase; bona fide error, restored to AO
+215. [ ] Cash deposits already in 44AD turnover can't be added again — Amit Dokwal v ITO, ITAT Hyderabad, Rs 42,40,000 (Taxscan roundup 20.07.2026) — cash theme used
+216. [ ] Notice only uploaded on ITBA portal ≠ valid service — Hiringhut Solutions v ITO, ITAT Bangalore (Jul 2026) — similar to 204
+217. [ ] DCIT fined Rs 25,000 costs for appeal against binding ruling — PCIT v Abhishek Engineering & Chemical Ltd, Bom HC Nagpur, ITA 45/2025, 02.11.2026
